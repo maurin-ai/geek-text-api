@@ -1,12 +1,14 @@
 const express = require('express');
 const pool = require('./config/db');
 const bookRoutes = require('./routes/bookRoutes');
+const authorRoutes = require('./routes/authorRoutes');
 
 const app = express();
 
 app.use(express.json());
 
 app.use('/books', bookRoutes);
+app.use('/authors', authorRoutes);
 
 app.get('/', async (req, res) => {
     try {
