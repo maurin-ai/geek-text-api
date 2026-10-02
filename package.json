@@ -1,0 +1,26 @@
+{
+  "name": "geek-text-api",
+  "version": "1.0.0",
+  "description": "CEN 4010 Group 10 - Geek Text Online Bookstore REST API",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/maurin-ai/geek-text-api.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/maurin-ai/geek-text-api/issues"
+  },
+  "homepage": "https://github.com/maurin-ai/geek-text-api#readme",
+  "dependencies": {
+    "dotenv": "^18.0.5",
+    "express": "^5.2.1",
+    "pg": "^8.23.1"
+  }
+}
