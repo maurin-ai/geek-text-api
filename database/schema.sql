@@ -22,3 +22,29 @@ CREATE TABLE books (
         FOREIGN KEY (author_id)
         REFERENCES authors(author_id)
 );
+
+CREATE TABLE wishlists (
+    wishlist_id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    user_id INTEGER NOT NULL,
+    name VARCHAR(100) NOT NULL,
+
+    CONSTRAINT unique_user_wishlist_name
+        UNIQUE (user_id, name)
+);
+
+CREATE TABLE wishlist_books (
+    wishlist_id INTEGER NOT NULL,
+    book_id INTEGER NOT NULL,
+
+    PRIMARY KEY (wishlist_id, book_id),
+
+    CONSTRAINT fk_wishlist
+        FOREIGN KEY (wishlist_id)
+        REFERENCES wishlists(wishlist_id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_wishlist_book
+        FOREIGN KEY (book_id)
+        REFERENCES books(book_id)
+        ON DELETE CASCADE
+); 

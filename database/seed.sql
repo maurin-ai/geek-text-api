@@ -364,3 +364,34 @@ VALUES
     1949,
     14000
 );
+-- =========================
+-- WISHLISTS
+-- =========================
+
+INSERT INTO wishlists (
+    user_id,
+    name
+)
+VALUES
+(1, 'Want to Read'),
+(1, 'Favorites'),
+(2, 'Sci-Fi List');
+
+
+-- =========================
+-- WISHLIST BOOKS
+-- =========================
+
+INSERT INTO wishlist_books (
+    wishlist_id,
+    book_id
+)
+VALUES
+(1, 1),
+(1, 3),
+(1, 5),
+(2, 7),
+(2, 9),
+(3, 4),
+(3, 6);
+
