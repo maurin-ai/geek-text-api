@@ -365,6 +365,7 @@ VALUES
     14000
 );
 
+
 -- =========================
 -- USERS
 -- =========================
@@ -411,4 +412,78 @@ VALUES
     NULL,
     NULL,
     NULL
+);
+-- =========================
+-- WISHLISTS
+-- =========================
+
+INSERT INTO wishlists (
+    user_id,
+    name
+)
+VALUES
+(
+    (SELECT user_id FROM users WHERE username = 'jdoe'),
+    'Want to Read'
+),
+(
+    (SELECT user_id FROM users WHERE username = 'jdoe'),
+    'Favorites'
+),
+(
+    (SELECT user_id FROM users WHERE username = 'asmith'),
+    'Sci-Fi List'
+);
+
+
+-- =========================
+-- WISHLIST BOOKS
+-- =========================
+
+INSERT INTO wishlist_books (
+    wishlist_id,
+    book_id
+)
+VALUES
+(
+    (SELECT wishlist_id FROM wishlists
+     WHERE name = 'Want to Read'
+       AND user_id = (SELECT user_id FROM users WHERE username = 'jdoe')),
+    1
+),
+(
+    (SELECT wishlist_id FROM wishlists
+     WHERE name = 'Want to Read'
+       AND user_id = (SELECT user_id FROM users WHERE username = 'jdoe')),
+    3
+),
+(
+    (SELECT wishlist_id FROM wishlists
+     WHERE name = 'Want to Read'
+       AND user_id = (SELECT user_id FROM users WHERE username = 'jdoe')),
+    5
+),
+(
+    (SELECT wishlist_id FROM wishlists
+     WHERE name = 'Favorites'
+       AND user_id = (SELECT user_id FROM users WHERE username = 'jdoe')),
+    7
+),
+(
+    (SELECT wishlist_id FROM wishlists
+     WHERE name = 'Favorites'
+       AND user_id = (SELECT user_id FROM users WHERE username = 'jdoe')),
+    9
+),
+(
+    (SELECT wishlist_id FROM wishlists
+     WHERE name = 'Sci-Fi List'
+       AND user_id = (SELECT user_id FROM users WHERE username = 'asmith')),
+    4
+),
+(
+    (SELECT wishlist_id FROM wishlists
+     WHERE name = 'Sci-Fi List'
+       AND user_id = (SELECT user_id FROM users WHERE username = 'asmith')),
+    6
 );
