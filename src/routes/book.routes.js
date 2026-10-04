@@ -3,6 +3,7 @@ import * as bookController from '../controllers/book.controller.js';
 
 const router = express.Router();
 
+router.get('/', bookController.search);
 router.get('/:isbn', bookController.getByIsbn);
 
 export default router;
