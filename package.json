@@ -2,9 +2,9 @@
   "name": "geek-text-api",
   "version": "1.0.0",
   "description": "CEN 4010 Group 10 - Geek Text Online Bookstore REST API",
-  "main": "index.js",
+  "main": "src/app.js",
   "scripts": {
-     "start": "node src/app.js"
+    "start": "node src/app.js"
   },
   "repository": {
     "type": "git",
@@ -13,7 +13,7 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
+  "type": "module",
   "bugs": {
     "url": "https://github.com/maurin-ai/geek-text-api/issues"
   },

@@ -22,3 +22,12 @@ CREATE TABLE books (
         FOREIGN KEY (author_id)
         REFERENCES authors(author_id)
 );
+
+CREATE TABLE users (
+    user_id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    username VARCHAR(100) UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    name VARCHAR(255),
+    email_address VARCHAR(255),
+    home_address TEXT
+);

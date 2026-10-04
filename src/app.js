@@ -1,7 +1,8 @@
-const express = require('express');
-const pool = require('./config/db');
-const bookRoutes = require('./routes/bookRoutes');
-const authorRoutes = require('./routes/authorRoutes');
+import express from 'express';
+import pool from './config/db.js';
+import bookRoutes from './routes/book.routes.js';
+import authorRoutes from './routes/author.routes.js';
+import userRoutes from './routes/user.routes.js';
 
 const app = express();
 
@@ -9,6 +10,7 @@ app.use(express.json());
 
 app.use('/books', bookRoutes);
 app.use('/authors', authorRoutes);
+app.use('/users', userRoutes);
 
 app.get('/', async (req, res) => {
     try {
@@ -27,7 +29,7 @@ app.get('/', async (req, res) => {
     }
 });
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);

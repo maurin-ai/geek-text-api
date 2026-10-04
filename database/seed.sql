@@ -364,3 +364,51 @@ VALUES
     1949,
     14000
 );
+
+-- =========================
+-- USERS
+-- =========================
+
+INSERT INTO users (
+    username,
+    password_hash,
+    name,
+    email_address,
+    home_address
+)
+VALUES
+(
+    'jdoe',
+    'b4d226508079e5d0cb8eabbf8d019e9d:2b8af11a1f3d4382d5fdb1c746c5e99c698150603baf638129dd8c98ba00d4b17adaa382b4b1e2ac38cfe682c781f970b938fd015245bef18ccc7bd5e53f47f6',
+    'John Doe',
+    'jdoe@example.com',
+    '123 Maple Street, Miami, FL 33101'
+),
+(
+    'asmith',
+    'b962cf0f4ae21ac2aa3c0b567aa3494b:8d5a50ca86295ae71d4efcf217db4a3bdca50b73f7375daab0877c69336213124c7d097d0abd9f2f506eae35782a72d586fa7b3a73c2453e6a0d78e8773c9d0f',
+    'Alice Smith',
+    'asmith@example.com',
+    '456 Oak Avenue, Orlando, FL 32801'
+),
+(
+    'bwayne',
+    '002994d3f29a29d532e3fcb0c13192b1:b1c03ae546434bea0fe82f9506a10c2efb6e3f4eb622f45c0d0683edc019a04048b49b807ba3d0408dbf1fefad1687306e8039ce016983c0522e38a97908293f',
+    'Bruce Wayne',
+    'bwayne@example.com',
+    '1007 Mountain Drive, Gotham, NJ 07001'
+),
+(
+    'creader',
+    'b2d003f9bd0d5e805776c95b10025ede:20665aff253e1bb04d5b7ad9dd7c4173a7c200ea95ad5d49427258b235ca1cbd181f54c359961530c94145fa8f8868d98dfad3ac748b3c73422d9f3e8339806b',
+    'Carol Reader',
+    'creader@example.com',
+    NULL
+),
+(
+    'minimal',
+    '75ea5e7955d68c644978984fe9ebb23a:0c815870f585dcebd1317e2494f62b06a4b425100188238a0e615c4ff70ecdb14e2747cdf8b1caf6c8a1a3cff2bb668f1c16708caabf5aee6e1cb719001090ca',
+    NULL,
+    NULL,
+    NULL
+);
