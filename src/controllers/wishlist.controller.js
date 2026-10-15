@@ -40,12 +40,37 @@ export async function createWishlist(req, res) {
   }
 
   try {
+    if (!(await Wishlist.userExists(userId))) {
+      return res.status(404).json({
+        error: "User not found",
+      });
+    }
+    const wishlistCount = await Wishlist.countByUser(userId);
+
+    if (wishlistCount >= 3) {
+      return res.status(409).json({
+        error: "User cannot have more than 3 wishlists",
+      });
+    }
+
     const wishlist = await Wishlist.create(userId, name);
 
     res.status(201).json(wishlist);
   } catch (error) {
     console.error(error);
-
+    if (
+      error.code === "23505" &&
+      error.constraint === "unique_user_wishlist_name"
+    ) {
+      return res.status(409).json({
+        error: "A wishlist with this name already exists for the user",
+      });
+    }
+    if (error.code === "23503") {
+      return res.status(404).json({
+        error: "User not found",
+      });
+    }
     res.status(500).json({
       error: "Failed to create wishlist",
     });
@@ -72,6 +97,12 @@ export async function addBook(req, res) {
       });
     }
 
+    if (!(await Wishlist.bookExists(bookId))) {
+      return res.status(404).json({
+        error: "Book not found",
+      });
+    }
+
     const wishlistBook = await Wishlist.addBook(wishlistId, bookId);
 
     res.status(201).json(wishlistBook);
@@ -81,6 +112,11 @@ export async function addBook(req, res) {
     if (error.code === "23505") {
       return res.status(409).json({
         error: "Book is already in wishlist",
+      });
+    }
+    if (error.code === "23503") {
+      return res.status(404).json({
+        error: "Wishlist or book not found",
       });
     }
     res.status(500).json({
@@ -182,8 +218,41 @@ export async function renameWishlist(req, res) {
   } catch (error) {
     console.error(error);
 
+    if (error.code === "23505") {
+      return res.status(409).json({
+        error: "A wishlist with this name already exists for the user",
+      });
+    }
+
     res.status(500).json({
       error: "Failed to rename wishlist",
+    });
+  }
+}
+export async function getUserWishlists(req, res) {
+  const { userId } = req.params;
+
+  if (!/^\d+$/.test(userId) || Number(userId) > MAX_INTEGER) {
+    return res.status(400).json({
+      error: "userId must be a positive integer",
+    });
+  }
+
+  try {
+    if (!(await Wishlist.userExists(userId))) {
+      return res.status(404).json({
+        error: "User not found",
+      });
+    }
+
+    const wishlists = await Wishlist.findByUser(userId);
+
+    res.json(wishlists);
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      error: "Failed to retrieve user wishlists",
     });
   }
 }
