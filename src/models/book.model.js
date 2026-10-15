@@ -93,3 +93,43 @@ export async function search({ genre, author, authorId, sort, order }) {
 
     return result.rows;
 }
+export async function create({
+    isbn,
+    name,
+    description,
+    price,
+    authorId,
+    genre,
+    publisher,
+    yearPublished,
+    copiesSold
+}) {
+    const result = await pool.query(
+        `INSERT INTO books (
+            isbn,
+            name,
+            description,
+            price,
+            author_id,
+            genre,
+            publisher,
+            year_published,
+            copies_sold
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        RETURNING *`,
+        [
+            isbn,
+            name,
+            description,
+            price,
+            authorId,
+            genre,
+            publisher,
+            yearPublished,
+            copiesSold
+        ]
+    );
+
+    return result.rows[0];
+}
