@@ -5,7 +5,10 @@ const MAX_INTEGER = 2147483647;
 export async function getBooks(req, res) {
   const { wishlistId } = req.params;
 
-  if (!/^\d+$/.test(wishlistId) || Number(wishlistId) > MAX_INTEGER) {
+  if (!/^\d+$/.test(wishlistId) ||
+    Number(wishlistId) <= 0 ||
+    Number(wishlistId) > MAX_INTEGER
+  ) {
     return res.status(400).json({
       error: "wishlistId must be a positive integer",
     });
@@ -33,11 +36,35 @@ export async function getBooks(req, res) {
 export async function createWishlist(req, res) {
   const { userId, name } = req.body || {};
 
-  if (!userId || !name) {
+  if (
+    userId === undefined ||
+    userId === null ||
+    name === undefined ||
+    name === null
+  ) {
     return res.status(400).json({
       error: "userId and name are required",
     });
   }
+
+  if (
+    !(
+      (typeof userId === "number" && Number.isInteger(userId)) ||
+      (typeof userId === "string" && /^\d+$/.test(userId))
+    ) ||
+    Number(userId) <= 0 ||
+    Number(userId) > MAX_INTEGER
+  ) {
+    return res.status(400).json({
+      error: "userId must be a positive integer",
+    });
+  }
+  if (typeof name !== "string" || name.trim() === "") {
+    return res.status(400).json({
+      error: "Wishlist name must be a non-empty string",
+    });
+  }
+  const cleanName = name.trim();
 
   try {
     if (!(await Wishlist.userExists(userId))) {
@@ -53,7 +80,7 @@ export async function createWishlist(req, res) {
       });
     }
 
-    const wishlist = await Wishlist.create(userId, name);
+    const wishlist = await Wishlist.create(userId, cleanName);
 
     res.status(201).json(wishlist);
   } catch (error) {
@@ -82,6 +109,8 @@ export async function addBook(req, res) {
   if (
     !/^\d+$/.test(wishlistId) ||
     !/^\d+$/.test(bookId) ||
+    Number(wishlistId) <= 0 ||
+    Number(bookId) <= 0 ||
     Number(wishlistId) > MAX_INTEGER ||
     Number(bookId) > MAX_INTEGER
   ) {
@@ -130,6 +159,8 @@ export async function removeBook(req, res) {
   if (
     !/^\d+$/.test(wishlistId) ||
     !/^\d+$/.test(bookId) ||
+    Number(wishlistId) <= 0 ||
+    Number(bookId) <= 0 ||
     Number(wishlistId) > MAX_INTEGER ||
     Number(bookId) > MAX_INTEGER
   ) {
@@ -165,7 +196,11 @@ export async function removeBook(req, res) {
 export async function deleteWishlist(req, res) {
   const { wishlistId } = req.params;
 
-  if (!/^\d+$/.test(wishlistId) || Number(wishlistId) > MAX_INTEGER) {
+  if (
+    !/^\d+$/.test(wishlistId) ||
+    Number(wishlistId) <= 0 ||
+    Number(wishlistId) > MAX_INTEGER
+  ) {
     return res.status(400).json({
       error: "wishlistId must be a positive integer",
     });
@@ -193,20 +228,24 @@ export async function renameWishlist(req, res) {
   const { wishlistId } = req.params;
   const { name } = req.body || {};
 
-  if (!/^\d+$/.test(wishlistId) || Number(wishlistId) > MAX_INTEGER) {
+  if (!/^\d+$/.test(wishlistId) ||
+    Number(wishlistId) <= 0 ||
+    Number(wishlistId) > MAX_INTEGER
+  ) {
     return res.status(400).json({
       error: "wishlistId must be a positive integer",
     });
   }
 
-  if (!name) {
+  if (typeof name !== "string" || name.trim() === "") {
     return res.status(400).json({
-      error: "name is required",
+      error: "Wishlist name must be a non-empty string",
     });
   }
+  const cleanName = name.trim();
 
   try {
-    const updatedWishlist = await Wishlist.rename(wishlistId, name);
+    const updatedWishlist = await Wishlist.rename(wishlistId, cleanName);
 
     if (!updatedWishlist) {
       return res.status(404).json({
@@ -232,7 +271,10 @@ export async function renameWishlist(req, res) {
 export async function getUserWishlists(req, res) {
   const { userId } = req.params;
 
-  if (!/^\d+$/.test(userId) || Number(userId) > MAX_INTEGER) {
+  if (!/^\d+$/.test(userId) ||
+    Number(userId) <= 0 ||
+    Number(userId) > MAX_INTEGER
+  ) {
     return res.status(400).json({
       error: "userId must be a positive integer",
     });

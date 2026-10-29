@@ -188,6 +188,99 @@ test("rejects a nonexistent user", async () => {
 
   assert.equal(body.error, "User not found");
 });
+test("rejects a zero user ID when creating a wishlist", async () => {
+  const response = await fetch(`${BASE_URL}/wishlists`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      userId: 0,
+      name: "Invalid Wishlist",
+    }),
+  });
+
+  assert.equal(response.status, 400);
+
+  const body = await response.json();
+
+  assert.equal(body.error, "userId must be a positive integer");
+});
+
+test("rejects a whitespace-only wishlist name", async () => {
+  const response = await fetch(`${BASE_URL}/wishlists`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      userId: testUserId,
+      name: "   ",
+    }),
+  });
+
+  assert.equal(response.status, 400);
+
+  const body = await response.json();
+
+  assert.equal(body.error, "Wishlist name must be a non-empty string");
+});
+
+test("rejects zero wishlist and book IDs", async () => {
+  const response = await fetch(
+    `${BASE_URL}/wishlists/0/books/0`,
+    {
+      method: "POST",
+    },
+  );
+
+  assert.equal(response.status, 400);
+
+  const body = await response.json();
+
+  assert.equal(
+    body.error,
+    "wishlistId and bookId must be positive integers",
+  );
+});
+
+test("rejects zero wishlist ID when retrieving books", async () => {
+  const response = await fetch(`${BASE_URL}/wishlists/0/books`);
+
+  assert.equal(response.status, 400);
+
+  const body = await response.json();
+
+  assert.equal(body.error, "wishlistId must be a positive integer");
+});
+
+test("rejects a whitespace-only wishlist rename", async () => {
+  const response = await fetch(`${BASE_URL}/wishlists/${wishlistId2}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      name: "   ",
+    }),
+  });
+
+  assert.equal(response.status, 400);
+
+  const body = await response.json();
+
+  assert.equal(body.error, "Wishlist name must be a non-empty string");
+});
+
+test("rejects zero user ID when retrieving wishlists", async () => {
+  const response = await fetch(`${BASE_URL}/wishlists/user/0`);
+
+  assert.equal(response.status, 400);
+
+  const body = await response.json();
+
+  assert.equal(body.error, "userId must be a positive integer");
+});
 
 test("adds a book to a wishlist", async () => {
   const response = await fetch(
@@ -285,4 +378,21 @@ test("deletes a wishlist", async () => {
   });
 
   assert.equal(response.status, 200);
+});
+test("trims whitespace when renaming a wishlist", async () => {
+  const response = await fetch(`${BASE_URL}/wishlists/${wishlistId2}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      name: "   Trimmed Wishlist   ",
+    }),
+  });
+
+  assert.equal(response.status, 200);
+
+  const body = await response.json();
+
+  assert.equal(body.name, "Trimmed Wishlist");
 });
