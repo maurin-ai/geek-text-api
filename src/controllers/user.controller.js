@@ -115,3 +115,96 @@ export async function createUser(req, res) {
         });
     }
 }
+
+export async function updateUser(req, res) {
+    const { username } = req.params;
+    const body = req.body;
+
+    if (body === null || typeof body !== 'object' || Array.isArray(body)) {
+        return res.status(400).json({
+            error: 'Request body must be a JSON object'
+        });
+    }
+
+    if (
+        Object.hasOwn(body, 'emailAddress') ||
+        Object.hasOwn(body, 'email_address') ||
+        Object.hasOwn(body, 'email')
+    ) {
+        return res.status(400).json({
+            error: 'emailAddress cannot be updated'
+        });
+    }
+
+    const { name, homeAddress, password, ...unknownFields } = body;
+
+    if (Object.keys(unknownFields).length > 0) {
+        return res.status(400).json({
+            error: `Cannot update ${Object.keys(unknownFields).join(', ')}. Allowed fields: name, homeAddress, password`
+        });
+    }
+
+    if (name === undefined && homeAddress === undefined && password === undefined) {
+        return res.status(400).json({
+            error: 'At least one of name, homeAddress or password is required'
+        });
+    }
+
+    if (
+        (name !== undefined && name !== null && typeof name !== 'string') ||
+        (homeAddress !== undefined && homeAddress !== null && typeof homeAddress !== 'string')
+    ) {
+        return res.status(400).json({
+            error: 'name and homeAddress must be strings'
+        });
+    }
+
+    if (password !== undefined && (typeof password !== 'string' || password.length < 8)) {
+        return res.status(400).json({
+            error: 'password must be at least 8 characters'
+        });
+    }
+
+    const fields = {};
+
+    if (name !== undefined) {
+        fields.name = typeof name === 'string' && name.trim() !== ''
+            ? name.trim()
+            : null;
+    }
+
+    if (homeAddress !== undefined) {
+        fields.homeAddress = typeof homeAddress === 'string' && homeAddress.trim() !== ''
+            ? homeAddress.trim()
+            : null;
+    }
+
+    if (password !== undefined) {
+        fields.password = password;
+    }
+
+    if (fields.name && fields.name.length > 255) {
+        return res.status(400).json({
+            error: 'name must be at most 255 characters'
+        });
+    }
+
+    try {
+        const user = await User.update(username, fields);
+
+        if (!user) {
+            return res.status(404).json({
+                error: 'User not found'
+            });
+        }
+
+        res.status(204).end();
+
+    } catch (error) {
+        console.error(error);
+
+        res.status(500).json({
+            error: 'Failed to update user'
+        });
+    }
+}
