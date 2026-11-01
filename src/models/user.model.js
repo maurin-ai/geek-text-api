@@ -1,5 +1,6 @@
 import bcrypt from 'bcrypt';
 import pool from '../config/db.js';
+import { buildSetClause } from '../utils/sql.js';
 
 const PUBLIC_COLUMNS = `
     user_id,
@@ -27,6 +28,30 @@ export async function create({ username, password, name, emailAddress, homeAddre
         VALUES ($1, $2, $3, $4, $5)
         RETURNING ${PUBLIC_COLUMNS}`,
         [username, passwordHash, name, emailAddress, homeAddress]
+    );
+
+    return result.rows[0];
+}
+
+export async function update(username, { password, ...fields }) {
+    const columns = password === undefined
+        ? fields
+        : { ...fields, passwordHash: await bcrypt.hash(password, 10) };
+
+    const { sets, params } = buildSetClause({
+        name: 'name',
+        homeAddress: 'home_address',
+        passwordHash: 'password_hash'
+    }, columns);
+
+    params.push(username);
+
+    const result = await pool.query(
+        `UPDATE users
+        SET ${sets}
+        WHERE username = $${params.length}
+        RETURNING ${PUBLIC_COLUMNS}`,
+        params
     );
 
     return result.rows[0];
