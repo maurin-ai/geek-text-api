@@ -128,3 +128,95 @@ export async function findByUser(userId) {
   );
   return result.rows;
 }
+export async function moveBook(sourceWishlistId, targetWishlistId, bookId) {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+
+    // Confirm both wishlist exist and retrieve their owners.
+    const wishlistResult = await client.query(
+      `SELECT wishlist_id, user_id
+            FROM wishlists
+            WHERE wishlist_id IN ($1, $2)`,
+      [sourceWishlistId, targetWishlistId],
+    );
+    if (wishlistResult.rows.length !== 2) {
+      await client.query("ROLLBACK");
+
+      return {
+        error: "WISHLIST_NOT_FOUND",
+      };
+    }
+
+    const sourceWishlist = wishlistResult.rows.find(
+      (wishlist) => Number(wishlist.wishlist_id) === Number(sourceWishlistId),
+    );
+    const targetWishlist = wishlistResult.rows.find(
+      (wishlist) => Number(wishlist.wishlist_id) === Number(targetWishlistId),
+    );
+    // A user should only move books between their own wishlists.
+    if (sourceWishlist.user_id !== targetWishlist.user_id) {
+      await client.query("ROLLBACK");
+
+      return {
+        error: "DIFFERENT_USERS",
+      };
+    }
+
+    // Confirm the book is currently in the source wishlist.
+    const bookInSourceResult = await client.query(
+      `SELECT wishlist_id, book_id
+            FROM wishlist_books
+            WHERE wishlist_id = $1 AND book_id = $2`,
+      [sourceWishlistId, bookId],
+    );
+    if (bookInSourceResult.rows.length === 0) {
+      await client.query("ROLLBACK");
+
+      return {
+        error: "BOOK_NOT_IN_SOURCE",
+      };
+    }
+    // Confirm the destination does not already contain the book.
+    const targetBookResult = await client.query(
+      `SELECT wishlist_id, book_id
+            FROM wishlist_books
+            WHERE wishlist_id = $1 AND book_id = $2`,
+      [targetWishlistId, bookId],
+    );
+    if (targetBookResult.rows.length > 0) {
+      await client.query("ROLLBACK");
+
+      return {
+        error: "BOOK_ALREADY_IN_TARGET",
+      };
+    }
+    // Add to destination first.
+    await client.query(
+      `INSERT INTO wishlist_books (wishlist_id, book_id)
+            VALUES ($1, $2)`,
+      [targetWishlistId, bookId],
+    );
+    // Remove from source.
+    await client.query(
+      `DELETE FROM wishlist_books
+            WHERE wishlist_id = $1 AND book_id = $2`,
+      [sourceWishlistId, bookId],
+    );
+
+    await client.query("COMMIT");
+
+    return {
+      source_wishlist_id:
+        Number(sourceWishlistId),
+      target_wishlist_id:
+        Number(targetWishlistId),
+      book_id: Number(bookId),
+    };
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+}
