@@ -5,6 +5,10 @@ const router = express.Router();
 
 router.post("/", wishlistController.createWishlist);
 router.post("/:wishlistId/books/:bookId", wishlistController.addBook);
+router.post(
+  "/:sourceWishlistId/books/:bookId/move/:targetWishlistId",
+  wishlistController.moveBook,
+);
 router.delete("/:wishlistId/books/:bookId", wishlistController.removeBook);
 router.delete("/:wishlistId", wishlistController.deleteWishlist);
 router.patch("/:wishlistId", wishlistController.renameWishlist);

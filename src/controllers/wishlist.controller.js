@@ -5,7 +5,8 @@ const MAX_INTEGER = 2147483647;
 export async function getBooks(req, res) {
   const { wishlistId } = req.params;
 
-  if (!/^\d+$/.test(wishlistId) ||
+  if (
+    !/^\d+$/.test(wishlistId) ||
     Number(wishlistId) <= 0 ||
     Number(wishlistId) > MAX_INTEGER
   ) {
@@ -59,9 +60,9 @@ export async function createWishlist(req, res) {
       error: "userId must be a positive integer",
     });
   }
-  if (typeof name !== "string" || name.trim() === "") {
+  if (typeof name !== "string" || name.trim() === "" || name.trim().length > 100) {
     return res.status(400).json({
-      error: "Wishlist name must be a non-empty string",
+      error: "Wishlist name must be between 1 and 100 characters",
     });
   }
   const cleanName = name.trim();
@@ -228,7 +229,8 @@ export async function renameWishlist(req, res) {
   const { wishlistId } = req.params;
   const { name } = req.body || {};
 
-  if (!/^\d+$/.test(wishlistId) ||
+  if (
+    !/^\d+$/.test(wishlistId) ||
     Number(wishlistId) <= 0 ||
     Number(wishlistId) > MAX_INTEGER
   ) {
@@ -237,9 +239,9 @@ export async function renameWishlist(req, res) {
     });
   }
 
-  if (typeof name !== "string" || name.trim() === "") {
+  if (typeof name !== "string" || name.trim() === "" || name.trim().length > 100) {
     return res.status(400).json({
-      error: "Wishlist name must be a non-empty string",
+      error: "Wishlist name must be between 1 and 100 characters",
     });
   }
   const cleanName = name.trim();
@@ -271,7 +273,8 @@ export async function renameWishlist(req, res) {
 export async function getUserWishlists(req, res) {
   const { userId } = req.params;
 
-  if (!/^\d+$/.test(userId) ||
+  if (
+    !/^\d+$/.test(userId) ||
     Number(userId) <= 0 ||
     Number(userId) > MAX_INTEGER
   ) {
@@ -295,6 +298,73 @@ export async function getUserWishlists(req, res) {
 
     res.status(500).json({
       error: "Failed to retrieve user wishlists",
+    });
+  }
+}
+export async function moveBook(req, res) {
+  const { sourceWishlistId, targetWishlistId, bookId } = req.params;
+
+  if (
+    !/^\d+$/.test(sourceWishlistId) ||
+    !/^\d+$/.test(targetWishlistId) ||
+    !/^\d+$/.test(bookId) ||
+    Number(sourceWishlistId) <= 0 ||
+    Number(targetWishlistId) <= 0 ||
+    Number(bookId) <= 0 ||
+    Number(sourceWishlistId) > MAX_INTEGER ||
+    Number(targetWishlistId) > MAX_INTEGER ||
+    Number(bookId) > MAX_INTEGER
+  ) {
+    return res.status(400).json({
+      error:
+        "sourceWishlistId, targetWishlistId, and bookId must be positive integers",
+    });
+  }
+
+  if (Number(sourceWishlistId) === Number(targetWishlistId)) {
+    return res.status(400).json({
+      error: "Source and target wishlist IDs must be different",
+    });
+  }
+
+  try {
+    const result = await Wishlist.moveBook(
+      sourceWishlistId,
+      targetWishlistId,
+      bookId,
+    );
+
+    if (result.error === "WISHLIST_NOT_FOUND") {
+      return res.status(404).json({
+        error: "Wishlist not found",
+      });
+    }
+
+    if (result.error === "DIFFERENT_USERS") {
+      return res.status(403).json({
+        error:
+          "Books can only be moved between wishlists owned by the same user",
+      });
+    }
+
+    if (result.error === "BOOK_NOT_IN_SOURCE") {
+      return res.status(404).json({
+        error: "Book not found in source wishlist",
+      });
+    }
+
+    if (result.error === "BOOK_ALREADY_IN_TARGET") {
+      return res.status(409).json({
+        error: "Book is already in target wishlist",
+      });
+    }
+
+    res.json(result);
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      error: "Failed to move book between wishlists",
     });
   }
 }
