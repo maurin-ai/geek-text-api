@@ -102,7 +102,9 @@ export async function search(req, res) {
         const books = await Book.search({ ...filters, sort, order, ...paging });
 
         if (paging.limit !== undefined) {
-            res.set('X-Total-Count', String(await Book.count(filters)));
+            const total = await Book.count(filters);
+            res.set('X-Total-Count', String(total));
+            res.set('X-Total-Pages', String(Math.ceil(total / paging.limit)));
         }
 
         res.json(books);

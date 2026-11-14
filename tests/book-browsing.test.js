@@ -122,6 +122,71 @@ test("breaks sort ties in a stable order", async () => {
   assert.ok(first.body[0].book_id < first.body[1].book_id);
 });
 
+// Adds a lowercase, undated book for one test, then removes it so counts stay at 3
+async function withExtraBook(run) {
+  const isbn = `${String(uniqueValue).slice(-12)}4`;
+  await pool.query(
+    `INSERT INTO books (isbn, name, price, author_id, genre, year_published, copies_sold)
+     VALUES ($1, $2, $3, $4, $5, NULL, 0)`,
+    [isbn, "apple Browsing Book", 15.0, testAuthorId, testGenre],
+  );
+
+  try {
+    await run(isbn);
+  } finally {
+    await pool.query("DELETE FROM books WHERE isbn = $1", [isbn]);
+  }
+}
+
+test("sorts titles alphabetically regardless of case", async () => {
+  await withExtraBook(async () => {
+    const { body } = await browse(genreQuery("sort=title"));
+
+    assert.deepEqual(
+      body.map((book) => book.name),
+      ["Alpha Browsing Book", "apple Browsing Book", "Bravo Browsing Book", "Charlie Browsing Book"],
+    );
+  });
+});
+
+test("puts books with no year last in both directions", async () => {
+  await withExtraBook(async (isbn) => {
+    const asc = await browse(genreQuery("sort=year&order=asc"));
+    const desc = await browse(genreQuery("sort=year&order=desc"));
+
+    assert.equal(asc.body.at(-1).isbn, isbn);
+    assert.equal(desc.body.at(-1).isbn, isbn);
+    assert.equal(desc.body[0].year_published, 2015);
+  });
+});
+
+test("sorts authors sharing a last name by first name", async () => {
+  // "Aaron" shares the test author's last name, so first name decides the order
+  const { rows } = await pool.query(
+    `INSERT INTO authors (first_name, last_name) VALUES ($1, $2) RETURNING author_id`,
+    ["Aaron", `Tester${uniqueValue}`],
+  );
+  const otherAuthorId = rows[0].author_id;
+  const isbn = `${String(uniqueValue).slice(-12)}5`;
+
+  try {
+    await pool.query(
+      `INSERT INTO books (isbn, name, price, author_id, genre)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [isbn, "Delta Browsing Book", 5.0, otherAuthorId, testGenre],
+    );
+
+    const asc = await browse(genreQuery("sort=author&order=asc"));
+    const desc = await browse(genreQuery("sort=author&order=desc"));
+
+    assert.equal(asc.body[0].isbn, isbn);
+    assert.equal(desc.body.at(-1).isbn, isbn);
+  } finally {
+    await pool.query("DELETE FROM books WHERE isbn = $1", [isbn]);
+    await pool.query("DELETE FROM authors WHERE author_id = $1", [otherAuthorId]);
+  }
+});
+
 test("filters by an inclusive price range", async () => {
   const { response, body } = await browse(
     genreQuery("min_price=10&max_price=20&sort=price"),
@@ -148,11 +213,12 @@ test("searches titles with a partial, case-insensitive match", async () => {
   assert.equal(body[0].name, "Bravo Browsing Book");
 });
 
-test("paginates results and reports the total count", async () => {
+test("paginates results and reports the total count and pages", async () => {
   const { response, body } = await browse(genreQuery("sort=price&limit=2&page=2"));
 
   assert.equal(response.status, 200);
   assert.equal(response.headers.get("x-total-count"), "3");
+  assert.equal(response.headers.get("x-total-pages"), "2");
   assert.equal(body.length, 1);
   assert.equal(body[0].price, 30);
 });
@@ -170,6 +236,26 @@ test("lists the test genre in /books/genres", async () => {
 
   assert.equal(response.status, 200);
   assert.ok(body.includes(testGenre));
+});
+
+test("leaves blank genres out of /books/genres", async () => {
+  const isbn = `${String(uniqueValue).slice(-12)}6`;
+
+  try {
+    await pool.query(
+      `INSERT INTO books (isbn, name, price, author_id, genre)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [isbn, "Blank Genre Book", 5.0, testAuthorId, "   "],
+    );
+
+    const response = await fetch(`${BASE_URL}/books/genres`);
+    const body = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.ok(body.every((genre) => genre.trim() !== ""));
+  } finally {
+    await pool.query("DELETE FROM books WHERE isbn = $1", [isbn]);
+  }
 });
 
 const badRequests = [
