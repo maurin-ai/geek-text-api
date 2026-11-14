@@ -25,12 +25,14 @@ const SEARCH_COLUMNS = `
     authors.author_id,
     authors.first_name || ' ' || authors.last_name AS author`;
 
+// Text fields sort case-insensitively so "apple" and "Apple" land together.
+// Authors sharing a last name fall back to first name.
 export const SORT_FIELDS = {
     price: 'books.price',
-    title: 'books.name',
+    title: 'LOWER(books.name)',
     year: 'books.year_published',
-    author: 'authors.last_name',
-    genre: 'books.genre',
+    author: ['LOWER(authors.last_name)', 'LOWER(authors.first_name)'],
+    genre: 'LOWER(books.genre)',
     sold: 'books.copies_sold'
 };
 
@@ -94,13 +96,17 @@ export async function search({ sort, order, limit, offset, ...filters }) {
         paging = `LIMIT $${params.length - 1} OFFSET $${params.length}`;
     }
 
+    const orderBy = [SORT_FIELDS[sort]].flat()
+        .map(column => `${column} ${order.toUpperCase()} NULLS LAST`)
+        .join(', ');
+
     const result = await pool.query(
         `SELECT ${SEARCH_COLUMNS}
         FROM books
         JOIN authors
             ON books.author_id = authors.author_id
         ${where}
-        ORDER BY ${SORT_FIELDS[sort]} ${order.toUpperCase()}, books.book_id ASC
+        ORDER BY ${orderBy}, books.book_id ASC
         ${paging}`,
         params
     );
@@ -205,7 +211,7 @@ export async function listGenres() {
     const result = await pool.query(
         `SELECT DISTINCT genre
         FROM books
-        WHERE genre IS NOT NULL
+        WHERE genre IS NOT NULL AND TRIM(genre) <> ''
         ORDER BY genre`
     );
 
