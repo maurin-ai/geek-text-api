@@ -62,3 +62,19 @@ CREATE TABLE wishlist_books (
         REFERENCES books(book_id)
         ON DELETE CASCADE
 );
+
+CREATE TABLE credit_cards (
+    credit_card_id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    user_id INTEGER NOT NULL,
+    card_number VARCHAR(19) NOT NULL,
+    expiration_date VARCHAR(5) NOT NULL,
+    cardholder_name VARCHAR(255),
+
+    CONSTRAINT unique_user_card
+        UNIQUE (user_id, card_number),
+
+    CONSTRAINT fk_credit_card_user
+        FOREIGN KEY (user_id)
+        REFERENCES users(user_id)
+        ON DELETE CASCADE
+);

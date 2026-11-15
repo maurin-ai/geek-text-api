@@ -56,3 +56,14 @@ export async function update(username, { password, ...fields }) {
 
     return result.rows[0];
 }
+
+export async function createCreditCard(userId, { cardNumber, expirationDate, cardholderName }) {
+    const result = await pool.query(
+        `INSERT INTO credit_cards (user_id, card_number, expiration_date, cardholder_name)
+        VALUES ($1, $2, $3, $4)
+        RETURNING credit_card_id`,
+        [userId, cardNumber, expirationDate, cardholderName]
+    );
+
+    return result.rows[0];
+}
